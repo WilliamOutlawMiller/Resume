@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>William Miller - Full-Stack Developer</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @if (ViewContext.RouteData.Values["action"]?.ToString() == "Resume")
+    {
+        <link rel="stylesheet" href="~/css/resume.css" asp-append-version="true" />
+    }
 </head>
 <body>
     <header>
@@ -13,13 +17,18 @@
                 <div class="nav-brand">
                     <a href="/">William Miller</a>
                 </div>
+                <button class="nav-toggle" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
                 <ul class="nav-menu">
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#experience">Experience</a></li>
-                    <li><a href="#projects">Projects</a></li>
-                    <li><a href="#skills">Skills</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                    <li><a href="@Url.Action("Resume")">Resume</a></li>
+                    <li><a href="/#about">About</a></li>
+                    <li><a href="/#experience">Experience</a></li>
+                    <li><a href="/#projects">Projects</a></li>
+                    <li><a href="/#skills">Skills</a></li>
+                    <li><a href="/#contact">Contact</a></li>
+                    <li><a href="/Resume">Resume</a></li>
                 </ul>
             </div>
         </nav>

@@ -17,5 +17,6 @@ RUN dotnet publish "WilliamMillerSite.csproj" -c Release -o /app/publish /p:UseA
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY --from=build /src/resume.md .
 ENTRYPOINT ["dotnet", "WilliamMillerSite.dll"]
 

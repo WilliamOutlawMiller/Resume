@@ -16,22 +16,20 @@ if (!isDocker)
 {
     app.UseHttpsRedirection();
 }
-app.UseStaticFiles();
 
+app.UseStaticFiles();
 app.UseRouting();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllerRoute("downloadResume", "Resume/Download", new { controller = "Home", action = "DownloadResume" });
+app.MapControllerRoute("resume", "Resume", new { controller = "Home", action = "Resume" });
+app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 
 if (isDocker)
 {
     var port = Environment.GetEnvironmentVariable("PORT") ?? "80";
-    var url = $"http://0.0.0.0:{port}";
-    app.Run(url);
+    app.Run($"http://0.0.0.0:{port}");
 }
 else
 {
     app.Run();
 }
-

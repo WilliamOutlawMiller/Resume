@@ -14,21 +14,22 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        var resumeData = _resumeService.ParseResume();
-        return View(resumeData);
+        return View(_resumeService.ParseResume());
     }
 
     public IActionResult Resume()
     {
-        var resumeHtml = _resumeService.GetResumeHtml();
-        ViewBag.ResumeHtml = resumeHtml;
+        ViewBag.ResumeHtml = _resumeService.GetResumeHtml();
+        ViewBag.SkillsHtml = _resumeService.GetSkillsHtml();
+        ViewBag.ResumeData = _resumeService.ParseResume();
         return View();
     }
 
+    [HttpGet("Resume/Download")]
     public IActionResult DownloadResume()
     {
         var markdownBytes = _resumeService.GetResumeMarkdownBytes();
-        return File(markdownBytes, "text/markdown", "WilliamMiller_Resume.md");
+        return File(markdownBytes, "text/markdown; charset=utf-8", "WilliamMiller_Resume.md");
     }
 
     public IActionResult Error()
@@ -36,4 +37,3 @@ public class HomeController : Controller
         return View();
     }
 }
-
