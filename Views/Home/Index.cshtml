@@ -1,4 +1,5 @@
 @model WilliamMillerSite.Services.ResumeData?
+@inject WilliamMillerSite.Services.ResumeService ResumeService
 @{
     ViewData["Title"] = "William Miller - Full-Stack Developer";
     var resumeData = Model ?? new WilliamMillerSite.Services.ResumeData();
@@ -136,7 +137,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <a href="@Url.Action("Resume")" class="experience-link" aria-label="View full details for @exp.Company"></a>
+                        <a href="@Url.Action("Resume")#@ResumeService.GetCompanySlug(exp.Company)" class="experience-link" aria-label="View full details for @exp.Company"></a>
                     </div>
                 }
             </div>

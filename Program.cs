@@ -24,7 +24,14 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "80";
-var url = $"http://0.0.0.0:{port}";
-app.Run(url);
+if (isDocker)
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "80";
+    var url = $"http://0.0.0.0:{port}";
+    app.Run(url);
+}
+else
+{
+    app.Run();
+}
 

@@ -52,11 +52,47 @@ The application uses the standard ASP.NET Core MVC structure:
 
 ## Deployment
 
-This application is configured for deployment to `williamoutlawmiller.com`. 
+This application is configured for automated deployment using GitHub Actions. See `GITHUB_ACTIONS_SETUP.md` for detailed setup instructions.
 
-### Deployment Options
+### Automated Deployment (Recommended)
 
-#### Option 1: IIS (Windows Server)
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically:
+
+1. Builds the Docker image on push to `main` or `prod` branches
+2. Deploys the application to the Linux server via SSH
+3. Updates the running container with zero downtime
+
+**Setup Required:**
+- Configure GitHub Secrets (see `GITHUB_ACTIONS_SETUP.md`)
+- Ensure Docker is installed on the server
+- Set up SSH key authentication
+
+### Manual Deployment Options
+
+#### Option 1: Docker (Linux Server)
+
+1. Build the Docker image:
+```bash
+docker build -t williammiller-site .
+```
+
+2. Run the container:
+```bash
+docker run -d -p 8080:80 --name williammiller-site williammiller-site
+```
+
+3. Configure NGINX as a reverse proxy (see `DEPLOYMENT.md`)
+
+#### Option 2: Docker Compose
+
+1. Build and start with docker-compose:
+```bash
+docker compose up -d
+```
+
+2. Configure NGINX as a reverse proxy (see `DEPLOYMENT.md`)
+
+#### Option 3: IIS (Windows Server)
 
 1. Build the application:
 ```bash
@@ -71,34 +107,7 @@ dotnet publish -c Release -o ./publish
 
 5. Set up HTTPS binding for your domain
 
-#### Option 2: Docker
-
-1. Build the Docker image:
-```bash
-docker build -t williammiller-site .
-```
-
-2. Run the container:
-```bash
-docker run -d -p 80:80 -p 443:443 --name williammiller-site williammiller-site
-```
-
-3. Configure your reverse proxy (NGINX/Apache) to forward requests to the container
-
-#### Option 3: Linux with NGINX
-
-1. Build the application:
-```bash
-dotnet publish -c Release -o ./publish
-```
-
-2. Deploy to your Linux server
-
-3. Configure NGINX as a reverse proxy pointing to the Kestrel server
-
-4. Set up systemd service for the application
-
-5. Configure SSL certificates (Let's Encrypt recommended)
+For detailed deployment instructions, see `DEPLOYMENT.md`.
 
 ## Customization
 

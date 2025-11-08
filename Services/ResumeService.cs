@@ -24,8 +24,63 @@ public class ResumeService
 
         var markdown = GetResumeMarkdown();
         var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-        _cachedResumeHtml = Markdown.ToHtml(markdown, pipeline);
+        var html = Markdown.ToHtml(markdown, pipeline);
+        
+        _cachedResumeHtml = AddExperienceSectionIds(html);
         return _cachedResumeHtml;
+    }
+
+    private string AddExperienceSectionIds(string html)
+    {
+        var resumeData = ParseResume();
+        var result = html;
+        
+        foreach (var exp in resumeData.Experiences)
+        {
+            var companySlug = GenerateSlug(exp.Company);
+            var escapedCompany = Regex.Escape(exp.Company);
+            var h3Pattern = $@"<h3>\s*({escapedCompany})\s*</h3>";
+            var replacement = $@"<h3 id=""{companySlug}"">$1</h3>";
+            
+            if (Regex.IsMatch(result, h3Pattern, RegexOptions.IgnoreCase))
+            {
+                result = Regex.Replace(result, h3Pattern, replacement, RegexOptions.IgnoreCase);
+            }
+            else
+            {
+                var flexiblePattern = $@"<h3>([^<]*{Regex.Escape(exp.Company.Split(new[] { ' ', '–', '-' }, StringSplitOptions.RemoveEmptyEntries)[0])}[^<]*)</h3>";
+                result = Regex.Replace(result, flexiblePattern, match =>
+                {
+                    var content = match.Groups[1].Value.Trim();
+                    if (content.Contains(exp.Company.Split(' ')[0], StringComparison.OrdinalIgnoreCase))
+                    {
+                        return $@"<h3 id=""{companySlug}"">{content}</h3>";
+                    }
+                    return match.Value;
+                }, RegexOptions.IgnoreCase);
+            }
+        }
+        
+        return result;
+    }
+
+    public string GetCompanySlug(string companyName)
+    {
+        return GenerateSlug(companyName);
+    }
+
+    private string GenerateSlug(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+        
+        var slug = text.ToLowerInvariant();
+        slug = Regex.Replace(slug, @"[^a-z0-9\s-]", "");
+        slug = Regex.Replace(slug, @"\s+", "-");
+        slug = Regex.Replace(slug, @"-+", "-");
+        slug = slug.Trim('-');
+        
+        return slug;
     }
 
     public string GetResumeMarkdown()

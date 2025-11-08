@@ -177,4 +177,9 @@ artifacts/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+*.bat
+*.ps1
+*.tar
+RDP_*.md
+rdp_*.md
 
