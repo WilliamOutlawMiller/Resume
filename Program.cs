@@ -1,7 +1,20 @@
+using Microsoft.AspNetCore.DataProtection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<WilliamMillerSite.Services.ResumeService>();
+
+var isDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
+if (isDocker)
+{
+    var dataProtectionKeysPath = "/root/.aspnet/DataProtection-Keys";
+    if (Directory.Exists(dataProtectionKeysPath))
+    {
+        builder.Services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+    }
+}
 
 var app = builder.Build();
 
@@ -11,7 +24,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-var isDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
 if (!isDocker)
 {
     app.UseHttpsRedirection();
