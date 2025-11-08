@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  williammiller-site:
+    image: williammiller-site:latest
+    container_name: williammiller-site
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - PORT=80
+    networks:
+      - web-network
+
+networks:
+  web-network:
+    driver: bridge
+
