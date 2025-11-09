@@ -251,7 +251,7 @@ public class ResumeService
                 if (parts.Length >= 2) currentExperience.Location = parts[1];
                 if (parts.Length >= 3) currentExperience.Duration = parts[2];
             }
-            else if (trimmed.StartsWith("**") && trimmed.Contains("|") && currentProject != null)
+            else if (trimmed.StartsWith("**") && trimmed.EndsWith("**") && currentProject != null)
             {
                 if (currentParagraph.Any())
                 {
@@ -262,10 +262,18 @@ public class ResumeService
                 }
                 
                 var projectMeta = trimmed.Replace("**", "").Trim();
-                var parts = projectMeta.Split('|', StringSplitOptions.TrimEntries);
                 
-                if (parts.Length >= 1) currentProject.Type = parts[0];
-                if (parts.Length >= 2) currentProject.Duration = parts[1];
+                if (projectMeta.Contains("|"))
+                {
+                    var parts = projectMeta.Split('|', StringSplitOptions.TrimEntries);
+                    if (parts.Length >= 1) currentProject.Type = parts[0];
+                    if (parts.Length >= 2) currentProject.Duration = parts[1];
+                }
+                else
+                {
+                    // No pipe means just Type, no Duration
+                    currentProject.Type = projectMeta;
+                }
             }
             else if (trimmed == "---") continue;
             else if (!string.IsNullOrWhiteSpace(trimmed) && inSummarySection)
