@@ -603,7 +603,7 @@
     }
 
     .experience-meta {
-        flex-direction: column;
+        flex-wrap: wrap;
         gap: var(--spacing-xs);
     }
 
@@ -629,7 +629,7 @@
 
     .project-slide {
         padding: var(--spacing-lg) var(--spacing-md);
-        position: relative;
+        position: absolute;
     }
 
     .project-slide-content {
