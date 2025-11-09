@@ -34,7 +34,7 @@ Full-stack Software Engineer with two years of experience at AllianceBernstein d
 
 #### Core Optimizer Platform
 
-Developed and maintained a municipal bond trading optimizer, a Python algorithm that recommended buys and sells for traders to execute. The optimizer included other optimization types such as the Custom SMA model portfolio system. Maintained the C# API as product owner and contributed significantly to the Python algorithm. Over two years, contributed more code than any other developer to both the Optimizer API and Python algorithm.
+Contributed in development and maintained a municipal bond trading optimizer, a Python algorithm that recommended buys and sells for traders to execute. The optimizer included other optimization types such as the Custom SMA model portfolio system. Maintained the C# API as product owner and contributed significantly to the Python algorithm. Over two years, contributed more code than any other developer to both the Optimizer API and Python algorithm.
 
 The C# API managed concurrency using multithreading, semaphores, read/write locks, monitors, and hashsets to manage CUSIP reservations and prevent race conditions during simultaneous trade offers. Implemented crash recovery functionality using timeout handling on client API calls and database state restoration on API startup. Created new semaphores and locks operating on the static layer of the API.
 

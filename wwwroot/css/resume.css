@@ -118,18 +118,10 @@
 }
 
 .resume-summary {
-    background-color: var(--secondary-light);
-    border: 2px solid var(--primary-color);
-    padding: 3rem;
-    border-radius: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 4rem;
-    position: relative;
-    overflow: hidden;
-    color: var(--text-color);
 }
 
-.resume-summary,
+.resume-summary-content,
 .resume-skills-content,
 .timeline-content {
     background-color: var(--secondary-light);
@@ -138,6 +130,8 @@
     border-radius: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     color: var(--text-color);
+    position: relative;
+    overflow: hidden;
 }
 
 .summary-text {
@@ -580,7 +574,7 @@
         margin-bottom: 2rem;
     }
 
-    .resume-summary,
+    .resume-summary-content,
     .resume-skills-content,
     .timeline-content {
         padding: 2rem 1.5rem;
@@ -713,7 +707,7 @@
         font-size: 1.5rem;
     }
 
-    .resume-summary,
+    .resume-summary-content,
     .resume-skills-content,
     .timeline-content {
         padding: 1.5rem 1rem;

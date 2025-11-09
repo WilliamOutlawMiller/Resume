@@ -1,40 +1,4 @@
 function initHeroAnimation() {
-    const hero = document.querySelector('.hero');
-    const headshot = document.querySelector('.headshot');
-    
-    if (!hero || !headshot) return;
-    
-    function calculateSplitPosition() {
-        const headshotRect = headshot.getBoundingClientRect();
-        const heroRect = hero.getBoundingClientRect();
-        
-        if (heroRect.height === 0) return;
-        
-        const headshotCenterY = headshotRect.top + (headshotRect.height / 2);
-        const relativePosition = headshotCenterY - heroRect.top;
-        const splitPercentage = Math.max(0, Math.min(100, (relativePosition / heroRect.height) * 100));
-        
-        hero.style.setProperty('--hero-split-position', `${splitPercentage}%`);
-    }
-    
-    calculateSplitPosition();
-    
-    const handleResize = () => {
-        calculateSplitPosition();
-    };
-    
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('load', calculateSplitPosition);
-    
-    requestAnimationFrame(() => {
-        calculateSplitPosition();
-    });
-    
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            calculateSplitPosition();
-        });
-    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

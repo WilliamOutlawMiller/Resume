@@ -1,3 +1,4 @@
+@inject WilliamMillerSite.Services.ResumeService ResumeService
 @{
     ViewData["Title"] = "Resume - William Miller";
     var resumeData = ViewBag.ResumeData as WilliamMillerSite.Services.ResumeData ?? new WilliamMillerSite.Services.ResumeData();
@@ -36,7 +37,9 @@
         {
             <div class="resume-summary">
                 <h3 class="section-label">Professional Summary</h3>
-                <p class="summary-text">@resumeData.Summary</p>
+                <div class="resume-summary-content">
+                    <p class="summary-text">@resumeData.Summary</p>
+                </div>
             </div>
         }
 
@@ -47,7 +50,7 @@
                 <div class="timeline">
                     @foreach (var exp in resumeData.Experiences)
                     {
-                        <div class="timeline-item" data-company="@exp.Company.ToLower().Replace(" ", "-")">
+                        <div class="timeline-item" id="@ResumeService.GetCompanySlug(exp.Company)" data-company="@exp.Company.ToLower().Replace(" ", "-")">
                             <div class="timeline-marker"></div>
                             <div class="timeline-content">
                                 <div class="experience-header">
@@ -156,7 +159,17 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.hash) {
+                const hash = window.location.hash.substring(1);
+                const companyElement = document.getElementById(hash);
+                if (companyElement && !hash.startsWith('project-')) {
+                    window.scrollTo(0, 0);
+                }
+            }
+            
             const carousel = document.getElementById('projectCarousel');
+            if (!carousel) return;
+            
             const slides = carousel.querySelectorAll('.project-slide');
             const indicators = document.querySelectorAll('.carousel-indicator');
             const prevBtn = document.querySelector('.carousel-btn-prev');
@@ -179,7 +192,8 @@
             
             function updateURL() {
                 const activeSlide = slides[currentSlide];
-                if (activeSlide && window.location.hash) {
+                const currentHash = window.location.hash.substring(1);
+                if (activeSlide && currentHash && currentHash.startsWith('project-')) {
                     const projectId = activeSlide.id;
                     const newUrl = window.location.pathname + '#' + projectId;
                     window.history.replaceState(null, '', newUrl);
@@ -212,9 +226,28 @@
                             setTimeout(() => {
                                 targetSlide.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }, 100);
+                            return;
                         }
                     }
-                } else {
+                    const companyElement = document.getElementById(hash);
+                    if (companyElement) {
+                        if (slides.length > 0) {
+                            slides.forEach((slide, i) => {
+                                slide.classList.toggle('active', i === 0);
+                            });
+                            indicators.forEach((indicator, i) => {
+                                indicator.classList.toggle('active', i === 0);
+                            });
+                            currentSlide = 0;
+                        }
+                        setTimeout(() => {
+                            const offset = companyElement.getBoundingClientRect().top + window.pageYOffset - 100;
+                            window.scrollTo({ top: offset, behavior: 'smooth' });
+                        }, 100);
+                        return;
+                    }
+                }
+                if (slides.length > 0) {
                     showSlide(0);
                 }
             }

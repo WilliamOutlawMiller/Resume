@@ -114,13 +114,98 @@ sudo ufw enable
 sudo ufw status
 ```
 
-### DNS Configuration (Squarespace)
+### DNS Configuration
+
+**Option 1: Direct DNS (Squarespace) - Requires ports in URL**
 
 Add DNS records in Squarespace:
 - **A Record:** `@` → `108.254.146.20`
 - **A Record:** `www` → `108.254.146.20`
 
-Verify DNS propagation:
+**Note:** With direct DNS, users must access the site with port numbers: `https://williamoutlawmiller.com:8443`
+
+**Option 2: Cloudflare Reverse Proxy - Standard ports without port numbers**
+
+Cloudflare acts as a reverse proxy, accepting traffic on standard ports (80/443) and forwarding to your server on ports 8080/8443. This allows users to access your site without port numbers.
+
+**Option 3: Self-Hosted Solutions (No Third-Party Service)**
+
+If you want to avoid third-party services, you have these options:
+
+**A. Contact Your ISP:**
+- Call your ISP and request they unblock ports 80/443
+- Residential ISPs typically block these ports to prevent web hosting
+- You may need to upgrade to a business internet plan
+- Business plans usually don't block ports 80/443
+
+**B. Use a VPS/Cloud Provider:**
+- Move your server to a cloud provider (DigitalOcean, Linode, AWS, etc.)
+- Cloud providers don't block ports 80/443
+- You can use standard ports directly
+- Cost: ~$5-10/month for a basic VPS
+
+**C. Set Up Your Own Reverse Proxy on a VPS:**
+- Rent a small VPS (DigitalOcean, Linode, etc.) for ~$5/month
+- Install NGINX on the VPS
+- Configure NGINX to proxy to your home server on ports 8080/8443
+- Point DNS to the VPS IP
+- Users access the VPS on standard ports, VPS forwards to your home server
+- This is essentially self-hosting your own Cloudflare
+
+**D. Accept Port Numbers in URL:**
+- Keep current setup with ports 8080/8443
+- Users access: `https://williamoutlawmiller.com:8443`
+- This is the simplest solution but requires port numbers in URLs
+
+**Recommendation:**
+For a public website, Option B (VPS/Cloud Provider) is the most practical solution. It's inexpensive, reliable, and doesn't require port numbers or third-party services.
+
+**Setup Steps:**
+
+1. **Sign up for Cloudflare** (free): https://www.cloudflare.com/
+
+2. **Add your domain to Cloudflare:**
+   - Go to Cloudflare Dashboard → Add a Site
+   - Enter `williamoutlawmiller.com`
+   - Choose the Free plan
+
+3. **Update DNS records in Cloudflare:**
+   - Go to DNS → Records
+   - Add A record: `@` → `108.254.146.20` (Proxy enabled - orange cloud)
+   - Add A record: `www` → `108.254.146.20` (Proxy enabled - orange cloud)
+   - **Important:** Make sure the proxy is enabled (orange cloud icon)
+
+4. **Update nameservers:**
+   - Cloudflare will provide nameservers (e.g., `ns1.cloudflare.com`, `ns2.cloudflare.com`)
+   - Update your domain registrar (Squarespace) to use Cloudflare's nameservers
+   - This may take 24-48 hours to propagate
+
+5. **Configure SSL/TLS:**
+   - Go to SSL/TLS → Overview
+   - Set encryption mode to "Full" or "Full (strict)"
+   - This ensures Cloudflare connects to your server via HTTPS on port 8443
+
+6. **Configure Cloudflare to use your custom ports:**
+   - Go to SSL/TLS → Origin Server
+   - Create an Origin Certificate (optional, but recommended)
+   - Or configure Cloudflare to connect to your server on port 8443
+   - Go to Network → Port Configuration
+   - Set HTTPS port to `8443` (if available in your plan)
+
+7. **Alternative: Use Cloudflare Tunnel (Cloudflared)**
+   - Install cloudflared on your server
+   - Create a tunnel that connects Cloudflare to your server on port 8080/8443
+   - This bypasses the need for port forwarding entirely
+
+**Benefits of Cloudflare:**
+- Users access site on standard ports (no `:8443` needed)
+- Free SSL certificates
+- DDoS protection
+- CDN and caching
+- Hides your server IP
+- Works even if ISP blocks ports 80/443
+
+**Verify DNS propagation:**
 ```bash
 nslookup williamoutlawmiller.com
 nslookup www.williamoutlawmiller.com
