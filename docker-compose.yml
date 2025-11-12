@@ -1,5 +1,8 @@
 services:
   williammiller-site:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: williammiller-site:latest
     container_name: williammiller-site
     restart: unless-stopped
