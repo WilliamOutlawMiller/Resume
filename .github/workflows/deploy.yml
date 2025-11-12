@@ -1,106 +1,124 @@
-name: Build and Deploy
+name: Deploy to Production
 
 on:
   push:
     branches:
       - prod
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to deploy'
-        required: true
-        default: 'prod'
 
 env:
-  DOCKER_IMAGE: williammiller-site
-  DOCKER_TAG: latest
+  APP_NAME: williammiller-site
   APP_DIR: /opt/williammiller-site
+  DOCKER_IMAGE: williammiller-site
+  CONTAINER_NAME: williammiller-site
+  CONTAINER_PORT: 8081
+  DOMAIN: williamoutlawmiller.com
+  CERT_EMAIL: williamoutlawmiller@gmail.com
+  NGINX_SITE_NAME: williammiller-site
+  REPO_URL: https://github.com/${{ github.repository }}.git
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Deploy to server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
-        script: |
-          set -e
-          
-          echo "=== Starting Deployment ==="
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Commit: ${{ github.sha }}"
-          echo ""
-          
-          cd ${{ env.APP_DIR }}
-          
-          echo "Step 1: Pulling latest code from GitHub..."
-          REPO_URL="https://github.com/${{ github.repository }}.git"
-          if [ -n "${{ secrets.GITHUB_PAT }}" ]; then
-            REPO_URL="https://${{ secrets.GITHUB_PAT }}@github.com/${{ github.repository }}.git"
-          fi
-          
-          if [ -d ".git" ]; then
-            git remote set-url origin $REPO_URL || true
-            git fetch origin
-            git reset --hard origin/prod
-            git clean -fd
-          else
-            echo "Repository not found. Cloning..."
-            git clone $REPO_URL .
-            git checkout prod
-          fi
-          
-          echo "Step 2: Building Docker image..."
-          docker build -t ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} .
-          
-          if [ $? -ne 0 ]; then
-            echo "ERROR: Docker build failed"
-            exit 1
-          fi
-          
-          echo "Step 3: Stopping existing container..."
-          docker stop williammiller-site 2>/dev/null || true
-          docker rm williammiller-site 2>/dev/null || true
-          
-          echo "Step 4: Starting new container..."
-          if [ -f "docker-compose.yml" ]; then
-            docker compose down 2>/dev/null || true
-            docker compose up -d
-          else
-            docker run -d \
-              --name williammiller-site \
-              --restart unless-stopped \
-              -p 8080:80 \
-              -e ASPNETCORE_ENVIRONMENT=Production \
-              -e ASPNETCORE_URLS=http://+:80 \
-              -e PORT=80 \
-              ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-          fi
-          
-          echo "Step 5: Verifying deployment..."
-          sleep 5
-          
-          if docker ps | grep -q williammiller-site; then
-            echo "SUCCESS: Container is running"
-            echo ""
-            echo "Container status:"
-            docker ps | grep williammiller-site
-            echo ""
-            echo "Recent logs:"
-            docker logs --tail 20 williammiller-site
-          else
-            echo "ERROR: Container is not running"
-            echo ""
-            echo "Container logs:"
-            docker logs williammiller-site || true
-            exit 1
-          fi
-          
-          echo ""
-          echo "=== Deployment Complete ==="
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
+            # Application configuration variables
+            APP_NAME="${{ env.APP_NAME }}"
+            APP_DIR="${{ env.APP_DIR }}"
+            DOCKER_IMAGE="${{ env.DOCKER_IMAGE }}"
+            CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
+            CONTAINER_PORT="${{ env.CONTAINER_PORT }}"
+            DOMAIN="${{ env.DOMAIN }}"
+            CERT_EMAIL="${{ env.CERT_EMAIL }}"
+            NGINX_SITE_NAME="${{ env.NGINX_SITE_NAME }}"
+            
+            # Prepare git repository URL (use HTTPS, with PAT if available)
+            REPO_URL="${{ env.REPO_URL }}"
+            GITHUB_PAT="${{ secrets.GITHUB_PAT }}"
+            if [ -n "$GITHUB_PAT" ]; then
+              # Insert PAT into URL: https://PAT@github.com/owner/repo.git
+              REPO_URL=$(echo "$REPO_URL" | sed "s|https://|https://$GITHUB_PAT@|")
+            fi
+            echo "Using REPO_URL: ${REPO_URL%%@*}" # Show URL without PAT for security
+            
+            # Get the deployment script from the repo
+            mkdir -p /opt/deploy-temp
+            rm -rf /opt/deploy-temp/$APP_NAME
+            git clone "$REPO_URL" /opt/deploy-temp/$APP_NAME
+            cd /opt/deploy-temp/$APP_NAME
+            if git show-ref --verify --quiet refs/remotes/origin/prod 2>/dev/null; then
+              git checkout prod
+            fi
+            chmod +x /opt/deploy-temp/$APP_NAME/.github/workflows/deploy-git.sh
+            /opt/deploy-temp/$APP_NAME/.github/workflows/deploy-git.sh "$APP_NAME" "$APP_DIR" "$REPO_URL"
+            rm -rf /opt/deploy-temp/$APP_NAME
+            
+            # Build and start Docker container first
+            echo "Building and starting Docker container..."
+            cd "$APP_DIR"
+            docker compose down || true
+            docker rmi $DOCKER_IMAGE:latest || true
+            
+            if ! docker compose up -d --build; then
+              echo "ERROR: Docker build or start failed"
+              docker compose logs
+              exit 1
+            fi
+            
+            # Wait for container to be ready
+            echo "Waiting for container to be ready..."
+            sleep 10
+            
+            CONTAINER_READY=false
+            for i in {1..30}; do
+              if docker ps | grep -q $CONTAINER_NAME && curl -f http://127.0.0.1:$CONTAINER_PORT > /dev/null 2>&1; then
+                echo "Container is ready"
+                CONTAINER_READY=true
+                break
+              fi
+              echo "Waiting for container... ($i/30)"
+              if [ $i -eq 30 ]; then
+                echo "ERROR: Container failed to start or become ready"
+                docker ps -a | grep $CONTAINER_NAME
+                docker logs $CONTAINER_NAME || true
+                exit 1
+              fi
+              sleep 2
+            done
+            
+            # Deploy nginx configuration and handle SSL certificates
+            if [ -f $APP_DIR/.github/workflows/deploy-nginx.sh ]; then
+              chmod +x $APP_DIR/.github/workflows/deploy-nginx.sh
+              sudo $APP_DIR/.github/workflows/deploy-nginx.sh "$APP_NAME" "$APP_DIR" "$NGINX_SITE_NAME" "$DOMAIN" "$CERT_EMAIL" "$CONTAINER_PORT"
+            elif [ -f $APP_DIR/nginx-server.conf ]; then
+              echo "Warning: deploy-nginx.sh not found, nginx config may not be deployed correctly"
+            fi
+            
+            docker image prune -f
+            
+            # Verify container is running
+            sleep 5
+            if docker ps | grep -q $CONTAINER_NAME; then
+              echo "✓ Container $CONTAINER_NAME is running"
+              docker ps | grep $CONTAINER_NAME
+            else
+              echo "✗ Container $CONTAINER_NAME is not running"
+              docker ps -a | grep $CONTAINER_NAME
+              exit 1
+            fi
+          EOF
