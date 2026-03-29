@@ -46,7 +46,7 @@ Maintained multiple applications including Python algorithms, .NET Framework 4.7
 
 ### QuaverEd
 
-**C# Developer | Nashville, TN | 2020 – 2022**
+**C# Developer | Nashville, TN | 2021 – 2023**
 
 Developed and maintained backend components for a .NET Framework 4.7.1 web application. Implemented data import functionality for school and district data, including bulk CSV processing and relational data mapping. Built queue-based batch processing systems with resume and cancellation capabilities. Integrated multiple third-party data sources and implemented OAuth2 and SSO authentication. Upgraded systems to meet OneRoster v1p1 specification requirements.
 
