@@ -2,15 +2,16 @@
 set -e
 
 # Script to handle git repository setup and updates
-# Usage: ./deploy-git.sh <APP_NAME> <APP_DIR> <REPO_URL>
+# Usage: ./deploy-git.sh <APP_NAME> <APP_DIR> <REPO_URL> [GIT_BRANCH]
 
 APP_NAME="$1"
 APP_DIR="$2"
 REPO_URL="$3"
+GIT_BRANCH="${4:-main}"
 
 if [ -z "$APP_NAME" ] || [ -z "$APP_DIR" ] || [ -z "$REPO_URL" ]; then
   echo "Error: Missing required parameters"
-  echo "Usage: $0 <APP_NAME> <APP_DIR> <REPO_URL>"
+  echo "Usage: $0 <APP_NAME> <APP_DIR> <REPO_URL> [GIT_BRANCH]"
   exit 1
 fi
 
@@ -46,14 +47,13 @@ if [ -d .git ]; then
     fi
     
     if [ "$CLONE_FRESH" = false ]; then
-      # Check if origin/prod exists
-      if git show-ref --verify --quiet refs/remotes/origin/prod 2>/dev/null; then
-        git reset --hard origin/prod
+      if git show-ref --verify --quiet "refs/remotes/origin/$GIT_BRANCH" 2>/dev/null; then
+        git reset --hard "origin/$GIT_BRANCH"
         git clean -fd
         echo "Git repository updated successfully"
       else
-        echo "origin/prod branch does not exist. Checking out local prod or creating it..."
-        git checkout prod 2>/dev/null || git checkout -b prod
+        echo "origin/$GIT_BRANCH does not exist. Checking out local branch or creating it..."
+        git checkout "$GIT_BRANCH" 2>/dev/null || git checkout -b "$GIT_BRANCH"
       fi
     fi
   fi
@@ -78,12 +78,11 @@ if [ "$CLONE_FRESH" = true ]; then
   mkdir -p "$APP_NAME"
   cd "$APP_NAME"
   git clone "$REPO_URL" .
-  # Check if prod branch exists after clone
-  if git show-ref --verify --quiet refs/remotes/origin/prod 2>/dev/null; then
-    git checkout prod
+  if git show-ref --verify --quiet "refs/remotes/origin/$GIT_BRANCH" 2>/dev/null; then
+    git checkout "$GIT_BRANCH"
   else
-    echo "prod branch does not exist on remote. Creating local prod branch..."
-    git checkout -b prod
+    echo "Branch $GIT_BRANCH does not exist on remote. Creating local branch..."
+    git checkout -b "$GIT_BRANCH"
   fi
 fi
 

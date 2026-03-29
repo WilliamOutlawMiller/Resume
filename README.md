@@ -8,8 +8,9 @@ ASP.NET Core MVC web application for showcasing professional developer portfolio
 - MVC (Model-View-Controller) pattern
 - Markdig for markdown processing
 - Docker for containerization
-- NGINX as reverse proxy
-- GitHub Actions for CI/CD
+- [Render](https://render.com) for managed hosting (Docker web service; see [`render.yaml`](./render.yaml) and [`docs/devops-render.md`](./docs/devops-render.md))
+- NGINX as reverse proxy (optional self-hosted path; see example [`nginx-server.conf`](./nginx-server.conf))
+- GitHub Actions workflow for **optional** self-hosted SSH deploy only (disabled for automatic runs; Render does not use it)
 
 ## Installation
 
@@ -30,248 +31,101 @@ Application runs at:
 - HTTP: `http://localhost:5000`
 - HTTPS: `https://localhost:5001`
 
-## Server Configuration
+## Deploy on Render
 
-### Initial Server Setup
+Production hosting is intended to run on **Render** as a Docker web service.
 
-**Server Details:**
-- Domain: `williamoutlawmiller.com`
-- Server IP: `108.254.146.20`
-- Server User: `bill-criminal`
-- Application Directory: `/opt/williammiller-site`
+1. Push this repository (including [`render.yaml`](./render.yaml)) to GitHub.
+2. In [Render](https://dashboard.render.com), choose **New → Blueprint**.
+3. Connect the repository and select the branch that should deploy (the blueprint defaults to `prod`; edit `render.yaml` if your deploy branch differs).
+4. Confirm the service name, region, and instance type, then create the blueprint.
+5. After the first successful deploy, open the web service → **Settings → Custom Domains** and attach your domain; follow Render’s DNS instructions for TLS.
 
-**Required Software Installation:**
+Operational detail (environment variables, health checks, domains, logs, rollbacks) is documented in **[`docs/devops-render.md`](./docs/devops-render.md)** in the same structure Render uses for web services and blueprints.
 
-```bash
-# Install Docker and Docker Compose
-sudo apt update
-sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+**Optional — Deploy to Render button:** After the repo is public, you can add a “Deploy to Render” button that points at `https://render.com/deploy` with your repo URL as documented in [Deploy to Render](https://render.com/docs/deploy-to-render).
 
-# Add user to docker group
-sudo usermod -aG docker bill-criminal
-newgrp docker
+## Self-hosted server (optional)
 
-# Install NGINX
-sudo apt install -y nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
+If you deploy to your own VPS instead of Render, install Docker, Docker Compose, and optionally NGINX. Replace every placeholder below with your own values — **do not commit real IPs, SSH accounts, or paths** to a public repository.
 
-# Create application directory
-sudo mkdir -p /opt/williammiller-site
-sudo chown bill-criminal:bill-criminal /opt/williammiller-site
-```
+**Placeholders:** `YOUR_SERVER_IP`, `YOUR_SSH_USER`, `YOUR_DOMAIN`, `you@example.com`, `/opt/your-app`, host port mapped from the app (e.g. `8081` as in [`docker-compose.yml`](./docker-compose.yml)).
 
-### NGINX Configuration
+**NGINX:** Copy and edit [`nginx-server.conf`](./nginx-server.conf) (defaults use `example.com`); adjust `server_name`, certificate paths, and `proxy_pass` to match your app port.
 
-Create `/etc/nginx/sites-available/williammiller-site`:
-
-```nginx
-server {
-    listen 80;
-    server_name williamoutlawmiller.com www.williamoutlawmiller.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection keep-alive;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-Enable site:
+**SSL (Certbot example):**
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/williammiller-site /etc/nginx/sites-enabled/
-sudo rm /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl reload nginx
+sudo certbot --nginx -d YOUR_DOMAIN -d www.YOUR_DOMAIN --non-interactive --agree-tos --email you@example.com
 ```
 
-### SSL Certificate Setup
+## GitHub Actions (self-hosted only)
 
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d williamoutlawmiller.com -d www.williamoutlawmiller.com --non-interactive --agree-tos --email williamoutlawmiller@gmail.com
-sudo certbot renew --dry-run
-```
+**Render-only:** You do **not** need GitHub Actions **secrets**, **variables**, or **environments** for deployment. Connect the repo in Render; pushes to your deploy branch trigger Render builds. Add a custom domain under the web service in the Render dashboard and point DNS there—no `DOMAIN` or `example.com` environment variable is required for this app (it does not read those for routing).
 
-### Firewall Configuration
+**Self-hosted (reference):** The workflow [`.github/workflows/deploy.yml`](./github/workflows/deploy.yml) is a generic template (`example-app` names, default branch `main`). It runs **only when you start it manually** (Actions → **Example — self-hosted SSH deploy (reference)** → Run workflow). Edit the `env` block in that file and align [`docker-compose.yml`](./docker-compose.yml) service/image/container names if you use it. Set repository variable `DEPLOY_GIT_BRANCH` if your deploy branch is not `main` (for example `prod`).
 
-```bash
-sudo ufw allow 'Nginx Full'
-sudo ufw allow OpenSSH
-sudo ufw enable
-sudo ufw status
-```
+Use **real** values in GitHub (your server IP, domain, email)—not the literal string `example.com` unless that is your domain. The `example.com` / `you@example.com` strings in this README are documentation placeholders for nginx and Certbot; they are not copied into Render.
 
-### DNS Configuration
+### Secrets (Settings → Secrets and variables → Actions → Secrets)
 
-**Option 1: Direct DNS (Squarespace) - Requires ports in URL**
+| Name | Description |
+| --- | --- |
+| `SERVER_HOST` | Server hostname or IP |
+| `SERVER_USER` | SSH user for deployment |
+| `SSH_PRIVATE_KEY` | Full PEM for the deploy key |
+| `SSH_PORT` | SSH port (often `22`) |
+| `GITHUB_PAT` | Optional PAT if the repo must be cloned with HTTPS auth |
 
-Add DNS records in Squarespace:
-- **A Record:** `@` → `108.254.146.20`
-- **A Record:** `www` → `108.254.146.20`
+### Variables (Settings → Secrets and variables → Actions → Variables)
 
-**Note:** With direct DNS, users must access the site with port numbers: `https://williamoutlawmiller.com:8443`
+| Name | Example | Used for |
+| --- | --- | --- |
+| `DEPLOY_APP_DIR` | `/opt/your-app` | Remote directory for the app |
+| `DEPLOY_CONTAINER_PORT` | `8081` | Host port NGINX proxies to |
+| `DEPLOY_DOMAIN` | `example.com` | Domain for NGINX / Certbot |
+| `CERT_EMAIL` | `you@example.com` | Let's Encrypt registration |
+| `DEPLOY_GIT_BRANCH` | `main` | Git branch to deploy (omit to default to `main`; use `prod` if that is your deploy branch) |
 
-**Option 2: Cloudflare Reverse Proxy - Standard ports without port numbers**
-
-Cloudflare acts as a reverse proxy, accepting traffic on standard ports (80/443) and forwarding to your server on ports 8080/8443. This allows users to access your site without port numbers.
-
-**Option 3: Self-Hosted Solutions (No Third-Party Service)**
-
-If you want to avoid third-party services, you have these options:
-
-**A. Contact Your ISP:**
-- Call your ISP and request they unblock ports 80/443
-- Residential ISPs typically block these ports to prevent web hosting
-- You may need to upgrade to a business internet plan
-- Business plans usually don't block ports 80/443
-
-**B. Use a VPS/Cloud Provider:**
-- Move your server to a cloud provider (DigitalOcean, Linode, AWS, etc.)
-- Cloud providers don't block ports 80/443
-- You can use standard ports directly
-- Cost: ~$5-10/month for a basic VPS
-
-**C. Set Up Your Own Reverse Proxy on a VPS:**
-- Rent a small VPS (DigitalOcean, Linode, etc.) for ~$5/month
-- Install NGINX on the VPS
-- Configure NGINX to proxy to your home server on ports 8080/8443
-- Point DNS to the VPS IP
-- Users access the VPS on standard ports, VPS forwards to your home server
-- This is essentially self-hosting your own Cloudflare
-
-**D. Accept Port Numbers in URL:**
-- Keep current setup with ports 8080/8443
-- Users access: `https://williamoutlawmiller.com:8443`
-- This is the simplest solution but requires port numbers in URLs
-
-**Recommendation:**
-For a public website, Option B (VPS/Cloud Provider) is the most practical solution. It's inexpensive, reliable, and doesn't require port numbers or third-party services.
-
-**Setup Steps:**
-
-1. **Sign up for Cloudflare** (free): https://www.cloudflare.com/
-
-2. **Add your domain to Cloudflare:**
-   - Go to Cloudflare Dashboard → Add a Site
-   - Enter `williamoutlawmiller.com`
-   - Choose the Free plan
-
-3. **Update DNS records in Cloudflare:**
-   - Go to DNS → Records
-   - Add A record: `@` → `108.254.146.20` (Proxy enabled - orange cloud)
-   - Add A record: `www` → `108.254.146.20` (Proxy enabled - orange cloud)
-   - **Important:** Make sure the proxy is enabled (orange cloud icon)
-
-4. **Update nameservers:**
-   - Cloudflare will provide nameservers (e.g., `ns1.cloudflare.com`, `ns2.cloudflare.com`)
-   - Update your domain registrar (Squarespace) to use Cloudflare's nameservers
-   - This may take 24-48 hours to propagate
-
-5. **Configure SSL/TLS:**
-   - Go to SSL/TLS → Overview
-   - Set encryption mode to "Full" or "Full (strict)"
-   - This ensures Cloudflare connects to your server via HTTPS on port 8443
-
-6. **Configure Cloudflare to use your custom ports:**
-   - Go to SSL/TLS → Origin Server
-   - Create an Origin Certificate (optional, but recommended)
-   - Or configure Cloudflare to connect to your server on port 8443
-   - Go to Network → Port Configuration
-   - Set HTTPS port to `8443` (if available in your plan)
-
-7. **Alternative: Use Cloudflare Tunnel (Cloudflared)**
-   - Install cloudflared on your server
-   - Create a tunnel that connects Cloudflare to your server on port 8080/8443
-   - This bypasses the need for port forwarding entirely
-
-**Benefits of Cloudflare:**
-- Users access site on standard ports (no `:8443` needed)
-- Free SSL certificates
-- DDoS protection
-- CDN and caching
-- Hides your server IP
-- Works even if ISP blocks ports 80/443
-
-**Verify DNS propagation:**
-```bash
-nslookup williamoutlawmiller.com
-nslookup www.williamoutlawmiller.com
-```
-
-## GitHub Actions CI/CD Setup
-
-### GitHub Secrets Configuration
-
-In repository Settings → Secrets and variables → Actions, add:
-
-1. **SERVER_HOST**: `108.254.146.20`
-2. **SERVER_USER**: `bill-criminal`
-3. **SSH_PRIVATE_KEY**: Contents of SSH private key (full key including BEGIN/END lines)
-4. **SSH_PORT**: `22`
-5. **GITHUB_PAT**: (Optional) GitHub Personal Access Token for private repositories
-
-### SSH Key Setup
-
-Generate SSH key for GitHub Actions:
+### SSH key setup
 
 ```bash
 ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_actions_deploy
+ssh-copy-id -i ~/.ssh/github_actions_deploy.pub YOUR_SSH_USER@YOUR_SERVER_IP
 ```
 
-Copy public key to server:
+Add the **private** key contents to `SSH_PRIVATE_KEY`.
 
-```bash
-ssh-copy-id -i ~/.ssh/github_actions_deploy.pub bill-criminal@108.254.146.20
-```
+### Workflow behavior
 
-Add private key content to GitHub Secret `SSH_PRIVATE_KEY`.
-
-### Workflow Behavior
-
-The GitHub Actions workflow automatically:
-1. Triggers on push to `prod` branch
-2. SSHs into server
-3. Pulls latest code from GitHub
-4. Builds Docker image on server
-5. Deploys new container using docker-compose
-6. Verifies deployment
+When you run the workflow manually, it SSHs to the server, syncs the repository, runs `docker compose`, and runs the NGINX deploy script when present.
 
 ## Deployment
 
-### Automated Deployment (GitHub Actions)
+### Render
 
-Push to `prod` branch triggers automatic deployment.
+Push to the branch connected to the Render service (see `render.yaml`). Use the Render dashboard for manual deploys and logs.
 
-### Manual Deployment
+### Self-hosted via GitHub Actions
+
+Configure the secrets and variables above, then run **Example — self-hosted SSH deploy (reference)** from the Actions tab.
+
+### Self-hosted manual Docker
 
 ```bash
-cd /opt/williammiller-site
+cd /opt/your-app   # your DEPLOY_APP_DIR
 docker compose up -d
 docker ps
-docker logs williammiller-site
+docker logs <container-name>
 ```
 
-### Updating Application
+### Updating the application (self-hosted)
 
 ```bash
-cd /opt/williammiller-site
-docker stop williammiller-site
-docker rm williammiller-site
-docker compose up -d
-docker logs williammiller-site
+cd /opt/your-app
+docker compose down
+docker compose up -d --build
+docker logs <container-name>
 ```
 
 ## Troubleshooting
@@ -279,8 +133,8 @@ docker logs williammiller-site
 ### Container Won't Start
 
 ```bash
-docker logs williammiller-site
-sudo netstat -tlnp | grep 8080
+docker logs <container-name>
+sudo ss -tlnp | grep -E '8080|8081'
 docker ps -a
 ```
 
@@ -288,7 +142,7 @@ docker ps -a
 
 ```bash
 docker ps
-curl http://127.0.0.1:8080
+curl http://127.0.0.1:8081
 sudo nginx -t
 sudo tail -f /var/log/nginx/error.log
 ```
@@ -320,6 +174,8 @@ sudo nginx -t
 - `Program.cs` - Application entry point
 - `Dockerfile` - Docker image configuration
 - `docker-compose.yml` - Docker Compose configuration
+- `render.yaml` - Render Blueprint (IaC for the Docker web service)
+- `docs/devops-render.md` - Runbook for hosting on Render
 
 ## Customization
 
@@ -354,7 +210,7 @@ docker system prune -a
 ### View Logs
 
 ```bash
-docker logs -f williammiller-site
+docker logs -f <container-name>
 sudo tail -f /var/log/nginx/error.log
 ```
 

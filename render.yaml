@@ -1,0 +1,16 @@
+# Render Blueprint — https://docs.render.com/docs/blueprint-spec
+# Connect this repo in Render: New > Blueprint, then apply this file from the repo root.
+
+previews:
+  generation: automatic
+
+services:
+  - type: web
+    name: william-miller-resume
+    runtime: docker
+    branch: prod
+    region: oregon
+    healthCheckPath: /
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production

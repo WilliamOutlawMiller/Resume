@@ -1,25 +1,28 @@
-name: Deploy to Production
+# Reference template: SSH deploy to your own VPS with Docker Compose + optional NGINX.
+# Production deploy for this repo is intended on Render (see render.yaml and docs/devops-render.md).
+# To use this file: set Actions secrets/variables below, then run manually from the Actions tab.
+# Align docker-compose service image/container names with env APP_NAME and DOCKER_IMAGE here.
+name: Example — self-hosted SSH deploy (reference)
 
 on:
-  push:
-    branches:
-      - prod
+  workflow_dispatch:
 
 env:
-  APP_NAME: williammiller-site
-  APP_DIR: /opt/williammiller-site
-  DOCKER_IMAGE: williammiller-site
-  CONTAINER_NAME: williammiller-site
-  CONTAINER_PORT: 8081
-  DOMAIN: williamoutlawmiller.com
-  CERT_EMAIL: williamoutlawmiller@gmail.com
-  NGINX_SITE_NAME: williammiller-site
+  APP_NAME: example-app
+  APP_DIR: ${{ vars.DEPLOY_APP_DIR }}
+  DOCKER_IMAGE: example-app
+  CONTAINER_NAME: example-app
+  CONTAINER_PORT: ${{ vars.DEPLOY_CONTAINER_PORT }}
+  DOMAIN: ${{ vars.DEPLOY_DOMAIN }}
+  CERT_EMAIL: ${{ vars.CERT_EMAIL }}
+  NGINX_SITE_NAME: example-app
+  GIT_DEPLOY_BRANCH: ${{ vars.DEPLOY_GIT_BRANCH || 'main' }}
   REPO_URL: https://github.com/${{ github.repository }}.git
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,7 +40,6 @@ jobs:
       - name: Deploy to server
         run: |
           ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
-            # Application configuration variables
             APP_NAME="${{ env.APP_NAME }}"
             APP_DIR="${{ env.APP_DIR }}"
             DOCKER_IMAGE="${{ env.DOCKER_IMAGE }}"
@@ -46,79 +48,72 @@ jobs:
             DOMAIN="${{ env.DOMAIN }}"
             CERT_EMAIL="${{ env.CERT_EMAIL }}"
             NGINX_SITE_NAME="${{ env.NGINX_SITE_NAME }}"
-            
-            # Prepare git repository URL (use HTTPS, with PAT if available)
+            GIT_DEPLOY_BRANCH="${{ env.GIT_DEPLOY_BRANCH }}"
             REPO_URL="${{ env.REPO_URL }}"
             GITHUB_PAT="${{ secrets.GITHUB_PAT }}"
-            if [ -n "$GITHUB_PAT" ]; then
-              # Insert PAT into URL: https://PAT@github.com/owner/repo.git
-              REPO_URL=$(echo "$REPO_URL" | sed "s|https://|https://$GITHUB_PAT@|")
+            if [ -n "\$GITHUB_PAT" ]; then
+              REPO_URL=\$(echo "\$REPO_URL" | sed "s|https://|https://\$GITHUB_PAT@|")
             fi
-            echo "Using REPO_URL: ${REPO_URL%%@*}" # Show URL without PAT for security
-            
-            # Get the deployment script from the repo
+            echo "Using REPO_URL: \${REPO_URL%%@*}"
+
             mkdir -p /opt/deploy-temp
-            rm -rf /opt/deploy-temp/$APP_NAME
-            git clone "$REPO_URL" /opt/deploy-temp/$APP_NAME
-            cd /opt/deploy-temp/$APP_NAME
-            if git show-ref --verify --quiet refs/remotes/origin/prod 2>/dev/null; then
-              git checkout prod
+            rm -rf /opt/deploy-temp/\$APP_NAME
+            git clone "\$REPO_URL" /opt/deploy-temp/\$APP_NAME
+            cd /opt/deploy-temp/\$APP_NAME
+            if git show-ref --verify --quiet "refs/remotes/origin/\$GIT_DEPLOY_BRANCH" 2>/dev/null; then
+              git checkout "\$GIT_DEPLOY_BRANCH"
             fi
-            chmod +x /opt/deploy-temp/$APP_NAME/.github/workflows/deploy-git.sh
-            /opt/deploy-temp/$APP_NAME/.github/workflows/deploy-git.sh "$APP_NAME" "$APP_DIR" "$REPO_URL"
-            rm -rf /opt/deploy-temp/$APP_NAME
-            
-            # Build and start Docker container first
+            chmod +x /opt/deploy-temp/\$APP_NAME/.github/workflows/deploy-git.sh
+            /opt/deploy-temp/\$APP_NAME/.github/workflows/deploy-git.sh "\$APP_NAME" "\$APP_DIR" "\$REPO_URL" "\$GIT_DEPLOY_BRANCH"
+            rm -rf /opt/deploy-temp/\$APP_NAME
+
             echo "Building and starting Docker container..."
-            cd "$APP_DIR"
+            cd "\$APP_DIR"
             docker compose down || true
-            docker rmi $DOCKER_IMAGE:latest || true
-            
+            docker rmi \$DOCKER_IMAGE:latest || true
+
             if ! docker compose up -d --build; then
               echo "ERROR: Docker build or start failed"
               docker compose logs
               exit 1
             fi
-            
-            # Wait for container to be ready
+
             echo "Waiting for container to be ready..."
             sleep 10
-            
+
             CONTAINER_READY=false
             for i in {1..30}; do
-              if docker ps | grep -q $CONTAINER_NAME && curl -f http://127.0.0.1:$CONTAINER_PORT > /dev/null 2>&1; then
+              if docker ps | grep -q \$CONTAINER_NAME && curl -f http://127.0.0.1:\$CONTAINER_PORT > /dev/null 2>&1; then
                 echo "Container is ready"
                 CONTAINER_READY=true
                 break
               fi
-              echo "Waiting for container... ($i/30)"
-              if [ $i -eq 30 ]; then
+              echo "Waiting for container... (\$i/30)"
+              if [ \$i -eq 30 ]; then
                 echo "ERROR: Container failed to start or become ready"
-                docker ps -a | grep $CONTAINER_NAME
-                docker logs $CONTAINER_NAME || true
+                docker ps -a | grep \$CONTAINER_NAME
+                docker logs \$CONTAINER_NAME || true
                 exit 1
               fi
               sleep 2
             done
-            
-            # Deploy nginx configuration and handle SSL certificates
-            if [ -f $APP_DIR/.github/workflows/deploy-nginx.sh ]; then
-              chmod +x $APP_DIR/.github/workflows/deploy-nginx.sh
-              sudo $APP_DIR/.github/workflows/deploy-nginx.sh "$APP_NAME" "$APP_DIR" "$NGINX_SITE_NAME" "$DOMAIN" "$CERT_EMAIL" "$CONTAINER_PORT"
-            elif [ -f $APP_DIR/nginx-server.conf ]; then
+
+            if [ -f \$APP_DIR/.github/workflows/deploy-nginx.sh ]; then
+              chmod +x \$APP_DIR/.github/workflows/deploy-nginx.sh
+              sudo \$APP_DIR/.github/workflows/deploy-nginx.sh "\$APP_NAME" "\$APP_DIR" "\$NGINX_SITE_NAME" "\$DOMAIN" "\$CERT_EMAIL" "\$CONTAINER_PORT"
+            elif [ -f \$APP_DIR/nginx-server.conf ]; then
               echo "Warning: deploy-nginx.sh not found, nginx config may not be deployed correctly"
             fi
-            
+
             docker image prune -f
-            
-            # Verify container is running
+
             sleep 5
-            if docker ps | grep -q $CONTAINER_NAME; then
-              echo "✓ Container $CONTAINER_NAME is running"
-              docker ps | grep $CONTAINER_NAME
+            if docker ps | grep -q \$CONTAINER_NAME; then
+              echo "Container \$CONTAINER_NAME is running"
+              docker ps | grep \$CONTAINER_NAME
             else
-              echo "✗ Container $CONTAINER_NAME is not running"
-              docker ps -a | grep $CONTAINER_NAME
+              echo "Container \$CONTAINER_NAME is not running"
+              docker ps -a | grep \$CONTAINER_NAME
               exit 1
             fi
           EOF
