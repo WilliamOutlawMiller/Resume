@@ -41,7 +41,9 @@ Production hosting is intended to run on **Render** as a Docker web service.
 4. Confirm the service name, region, and instance type, then create the blueprint.
 5. After the first successful deploy, open the web service → **Settings → Custom Domains** and attach your domain; follow Render’s DNS instructions for TLS.
 
-Operational detail (environment variables, health checks, domains, logs, rollbacks) is documented in **[`docs/devops-render.md`](./docs/devops-render.md)** in the same structure Render uses for web services and blueprints.
+Commit a headshot as **`wwwroot/images/headshot.png`** (tracked in git) so the hero image is included in the Docker image. The downloadable resume is **`WilliamMiller_Resume.md`** from **Resume → Download** (markdown composed from `Data/resume.json`, not PDF).
+
+Operational detail (environment variables, health checks, domains, logs, rollbacks) is documented in **[`docs/devops-render.md`](./docs/devops-render.md)** in the same structure Render uses for web services and blueprints. Custom domains and DNS are also covered in [Render — Custom domains](https://render.com/docs/custom-domains).
 
 **Optional — Deploy to Render button:** After the repo is public, you can add a “Deploy to Render” button that points at `https://render.com/deploy` with your repo URL as documented in [Deploy to Render](https://render.com/docs/deploy-to-render).
 
@@ -170,7 +172,7 @@ sudo nginx -t
 - `Services/` - Business logic (ResumeService)
 - `Views/` - Razor views
 - `wwwroot/` - Static files (CSS, JavaScript, images)
-- `resume.md` - Resume content in markdown format
+- `Data/resume.json` - Resume content (profile, summary, skills, experience, projects)
 - `Program.cs` - Application entry point
 - `Dockerfile` - Docker image configuration
 - `docker-compose.yml` - Docker Compose configuration
@@ -181,7 +183,7 @@ sudo nginx -t
 
 ### Updating Resume Content
 
-Edit `resume.md` file. The application automatically parses and displays the content.
+Edit `Data/resume.json`. The site composes markdown for download and renders structured sections on the home and resume pages.
 
 ### Updating Social Links
 

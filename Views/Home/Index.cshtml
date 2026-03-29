@@ -1,8 +1,8 @@
-@model WilliamMillerSite.Services.ResumeData?
+@model ResumeData?
 @inject WilliamMillerSite.Services.ResumeService ResumeService
 @{
     ViewData["Title"] = "William Miller - Full-Stack Developer";
-    var resumeData = Model ?? new WilliamMillerSite.Services.ResumeData();
+    var resumeData = Model ?? new ResumeData();
 }
 
 <section class="hero">
@@ -14,7 +14,7 @@
     <div class="container">
         <div class="hero-content">
             <div class="headshot-container">
-                <img src="@Url.Content("~/images/headshot.jpg")" 
+                <img src="@Url.Content("~/images/headshot.png")"
                      alt="William Miller" class="headshot" id="headshot-img" />
             </div>
             <div class="hero-text">
@@ -137,7 +137,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <a href="/Resume#@ResumeService.GetCompanySlug(exp.Company)" class="experience-link" aria-label="View full details for @exp.Company"></a>
+                        <a href="/Resume#@ResumeService.GetExperienceAnchor(exp)" class="experience-link" aria-label="View full details for @exp.Company"></a>
                     </div>
                 }
             </div>
@@ -165,7 +165,7 @@
         <div class="projects-showcase">
             @foreach (var project in resumeData.Projects)
             {
-                <a href="/Resume#project-@project.Title.ToLower().Replace(" ", "-")" class="project-showcase-card" data-type="@project.Type">
+                <a href="/Resume#@ResumeService.GetProjectElementId(project)" class="project-showcase-card" data-type="@project.Type">
                     <div class="project-showcase-content">
                         <div class="project-showcase-header">
                             <h4 class="project-showcase-title">@project.Title</h4>
@@ -193,10 +193,10 @@
             <div class="skill-category-card">
                 <h3>Core Technologies</h3>
                 <div class="skill-bars">
-                    <div class="skill-bar" data-skill="C#" data-years="3">
+                    <div class="skill-bar" data-skill="C#" data-years="4">
                         <div class="skill-label">
                             <span>C#</span>
-                            <span class="skill-years">3 years</span>
+                            <span class="skill-years">4 years</span>
                         </div>
                         <div class="skill-progress"><div class="skill-fill" style="width: 100%;"></div></div>
                     </div>
@@ -205,19 +205,19 @@
                             <span>Python</span>
                             <span class="skill-years">2 years</span>
                         </div>
-                        <div class="skill-progress"><div class="skill-fill" style="width: 66.67%;"></div></div>
+                        <div class="skill-progress"><div class="skill-fill" style="width: 50%;"></div></div>
                     </div>
                     <div class="skill-bar" data-skill="Angular" data-years="2">
                         <div class="skill-label">
                             <span>Angular</span>
                             <span class="skill-years">2 years</span>
                         </div>
-                        <div class="skill-progress"><div class="skill-fill" style="width: 66.67%;"></div></div>
+                        <div class="skill-progress"><div class="skill-fill" style="width: 50%;"></div></div>
                     </div>
-                    <div class="skill-bar" data-skill="SQL" data-years="3">
+                    <div class="skill-bar" data-skill="SQL" data-years="4">
                         <div class="skill-label">
                             <span>SQL</span>
-                            <span class="skill-years">3 years</span>
+                            <span class="skill-years">4 years</span>
                         </div>
                         <div class="skill-progress"><div class="skill-fill" style="width: 100%;"></div></div>
                     </div>
@@ -226,17 +226,18 @@
                             <span>DevOps</span>
                             <span class="skill-years">1 year</span>
                         </div>
-                        <div class="skill-progress"><div class="skill-fill" style="width: 33.33%;"></div></div>
+                        <div class="skill-progress"><div class="skill-fill" style="width: 25%;"></div></div>
                     </div>
                 </div>
             </div>
             <div class="skill-category-card">
                 <h3>Frameworks & Libraries</h3>
                 <div class="skills-grid-compact">
-                    <span class="skill-tag">.NET Core / .NET 8</span>
+                    <span class="skill-tag">.NET Framework 4.7.1</span>
+                    <span class="skill-tag">.NET 8 / .NET 9</span>
+                    <span class="skill-tag">ASP.NET</span>
                     <span class="skill-tag">Angular</span>
-                    <span class="skill-tag">Flask</span>
-                    <span class="skill-tag">FastAPI</span>
+                    <span class="skill-tag">Vue</span>
                     <span class="skill-tag">Entity Framework</span>
                     <span class="skill-tag">SignalR</span>
                 </div>
@@ -246,9 +247,9 @@
                 <div class="skills-grid-compact">
                     <span class="skill-tag">Docker</span>
                     <span class="skill-tag">Kubernetes</span>
-                    <span class="skill-tag">Azure DevOps</span>
                     <span class="skill-tag">GitHub Actions</span>
-                    <span class="skill-tag">CI/CD Pipelines</span>
+                    <span class="skill-tag">ETL pipelines</span>
+                    <span class="skill-tag">Batch processing</span>
                     <span class="skill-tag">NGINX</span>
                 </div>
             </div>
@@ -260,7 +261,7 @@
                     <span class="skill-tag">OAuth 2.0 & SSO</span>
                     <span class="skill-tag">ETL Pipelines</span>
                     <span class="skill-tag">LLM Integration</span>
-                    <span class="skill-tag">REST APIs</span>
+                    <span class="skill-tag">Memory Management</span>
                 </div>
             </div>
         </div>

@@ -21,6 +21,7 @@ public class HomeController : Controller
     {
         ViewBag.ResumeHtml = _resumeService.GetResumeHtml();
         ViewBag.SkillsHtml = _resumeService.GetSkillsHtml();
+        ViewBag.ProfileContactHtml = _resumeService.RenderProfileContactHtml();
         ViewBag.ResumeData = _resumeService.ParseResume();
         return View();
     }

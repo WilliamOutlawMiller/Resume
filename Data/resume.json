@@ -1,0 +1,95 @@
+{
+  "profile": {
+    "heading": "WILLIAM MILLER",
+    "contactMarkdown": "Nashville, TN • (615) 630-1806 • [williamoutlawmiller@gmail.com](mailto:williamoutlawmiller@gmail.com) • [LinkedIn](https://www.linkedin.com/in/william-miller-b31829214/) • [GitHub](https://github.com/WilliamOutlawMiller)"
+  },
+  "summary": "Nashville local and Full-stack Software Engineer with specialization in backend APIs. Four years of experience in software development, with heavy focus on ETL pipelines, backend web application services, console apps, batch jobs, database procedures and tables, and memory optimization.",
+  "skillsMarkdown": "**Languages:** Python, C#, JavaScript, TypeScript, SQL, HTML/CSS\n\n**Frameworks & Libraries:** .NET Core, .NET 8, .NET Framework 4.7.1, Angular, Flask, Uvicorn, FastAPI, Entity Framework, WCF, SignalR\n\n**DevOps & Infrastructure:** Docker, Kubernetes, Azure DevOps, GitHub Actions, Airflow, Apache, NGINX, YAML, CI/CD Pipelines, TFS\n\n**Databases:** Oracle, SQL Server, MySQL, SQLite\n\n**Specializations:** API Design & Architecture, Multithreading & Concurrency Control, OAuth 2.0 & SSO, Permission-Based Access Control, ETL Pipelines, LLM Integration, Memory Caching, REST APIs\n\n**Platforms:** Linux, Windows",
+  "experiences": [
+    {
+      "anchorId": "quavered-current",
+      "company": "QuaverEd",
+      "role": "C# Developer",
+      "location": "Nashville, TN",
+      "duration": "January 2026 – Present",
+      "bulletPoints": [
+        "Maintaining and improving the backend infrastructure for a web application used in classrooms to teach music and other curricula. Work includes maintaining C# API endpoints to provide services to frontend applications (Vue and ASP.NET).",
+        "Maintain relational databases to provide user-based content at scale, including licensing and alternate translations of items."
+      ]
+    },
+    {
+      "anchorId": "alliancebernstein-fixed-income",
+      "company": "AllianceBernstein – Fixed Income Technology",
+      "role": "Developer (Contractor via Sans Consulting)",
+      "location": "Nashville, TN",
+      "duration": "November 2023 – November 2025",
+      "bulletPoints": [
+        "Maintained and implemented functionality on algorithms, APIs, UIs, and stored procedures for a production application that recommended trades to the business. Developed features at the direction of the business to improve and enhance the trading algorithm.",
+        "Maintained and implemented functionality on stored procedures and functions used by the Optimizer applications. Created and maintained tables used by the business. Built complex aggregation queries and used EXPLAIN-based optimization. Worked with Oracle and SQL Server."
+      ]
+    },
+    {
+      "anchorId": "quavered-2021-2023",
+      "company": "QuaverEd — 2021 to 2023",
+      "role": "C# Developer",
+      "location": "Nashville, TN",
+      "duration": "2021 – 2023",
+      "bulletPoints": [
+        "Created and maintained backend processes for integrating QuaverEd software with school systems. Data was consumed via an ETL pipeline through third-party API requests or CSV uploads. Data supported classroom rosters and allowed students to sign in without separate usernames and passwords.",
+        "Built batch upload functionality for CSVs, processing large volumes of school data into the database daily. Implemented complex insert and update logic in C# for large datasets. Monitored and resolved data quality issues affecting live user sign-in. Used MySQL."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "anchorId": "trading-optimizer-platform",
+      "title": "Trading Optimizer Platform",
+      "type": "Work Project",
+      "duration": "",
+      "bulletPoints": [
+        "End-to-end work on a production municipal bond trading optimizer: Python algorithms, C# APIs, Angular UIs, Oracle and SQL Server stored procedures, concurrency controls for trading workflows, and crash recovery patterns."
+      ],
+      "technologies": ["C#", "Python", "Angular", "Oracle", "SQL Server"]
+    },
+    {
+      "anchorId": "quavered-integrations",
+      "title": "QuaverEd integrations and data pipeline",
+      "type": "Work Project",
+      "duration": "",
+      "bulletPoints": [
+        "School SSO and rostering integrations, ETL from APIs and CSV batch uploads, and high-volume MySQL operations supporting classroom and user-scale data."
+      ],
+      "technologies": ["C#", "MySQL"]
+    },
+    {
+      "anchorId": "fantasylcs-webapp",
+      "title": "FantasyLCS WebApp",
+      "type": "Personal Project",
+      "duration": "",
+      "bulletPoints": [
+        "Full-stack Razor application for an LCS fantasy league using C#, Entity Framework, SQLite, SignalR for live scores, NGINX on a Raspberry Pi, and GitHub Actions deployment automation."
+      ],
+      "technologies": ["C#", "Entity Framework", "SQLite", "SignalR", "NGINX", "GitHub Actions"]
+    },
+    {
+      "anchorId": "resume-webapp",
+      "title": "Resume Webapp",
+      "type": "Personal Project",
+      "duration": "",
+      "bulletPoints": [
+        "ASP.NET Core 8 MVC portfolio site with JSON-driven resume content, Docker deployment, and hosting on Render with custom domain support."
+      ],
+      "technologies": ["ASP.NET Core", "Docker"]
+    },
+    {
+      "anchorId": "songs-of-syx-mod",
+      "title": "Songs of Syx — Warhammer Overhaul",
+      "type": "Mod",
+      "duration": "",
+      "bulletPoints": [
+        "Java performance work: memory pooling, pathfinding bounds, CPU reductions in army AI, and GC-friendly patterns for a large game mod."
+      ],
+      "technologies": ["Java"]
+    }
+  ]
+}

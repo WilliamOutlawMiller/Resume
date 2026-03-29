@@ -1,15 +1,15 @@
 @inject WilliamMillerSite.Services.ResumeService ResumeService
 @{
     ViewData["Title"] = "Resume - William Miller";
-    var resumeData = ViewBag.ResumeData as WilliamMillerSite.Services.ResumeData ?? new WilliamMillerSite.Services.ResumeData();
+    var resumeData = ViewBag.ResumeData as ResumeData ?? new ResumeData();
 }
 
 <section class="resume-section">
     <div class="container">
         <div class="resume-hero">
             <div class="resume-hero-content">
-                <h2 class="resume-name">WILLIAM MILLER</h2>
-                <p class="resume-contact">Nashville, TN • (615) 630-1806 • williamoutlawmiller@gmail.com</p>
+                <h2 class="resume-name">@(string.IsNullOrWhiteSpace(resumeData.Profile.Heading) ? "WILLIAM MILLER" : resumeData.Profile.Heading)</h2>
+                <div class="resume-contact">@Html.Raw(ViewBag.ProfileContactHtml ?? "")</div>
                 <div class="resume-social">
                     <a href="https://www.linkedin.com/in/william-miller-b31829214/" target="_blank" class="social-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -50,7 +50,7 @@
                 <div class="timeline">
                     @foreach (var exp in resumeData.Experiences)
                     {
-                        <div class="timeline-item" id="@ResumeService.GetCompanySlug(exp.Company)" data-company="@exp.Company.ToLower().Replace(" ", "-")">
+                        <div class="timeline-item" id="@ResumeService.GetExperienceAnchor(exp)" data-company="@exp.Company.ToLower().Replace(" ", "-")">
                             <div class="timeline-marker"></div>
                             <div class="timeline-content">
                                 <div class="experience-header">
@@ -109,7 +109,7 @@
                         @for (int i = 0; i < resumeData.Projects.Count; i++)
                         {
                             var project = resumeData.Projects[i];
-                            <div class="project-slide" id="project-@project.Title.ToLower().Replace(" ", "-")" data-slide-index="@i" data-type="@project.Type">
+                            <div class="project-slide" id="@ResumeService.GetProjectElementId(project)" data-slide-index="@i" data-type="@project.Type">
                                 <div class="project-slide-content">
                                     <div class="project-slide-header">
                                         <h4 class="project-slide-title">@project.Title</h4>
