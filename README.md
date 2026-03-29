@@ -41,7 +41,7 @@ Production hosting is intended to run on **Render** as a Docker web service.
 4. Confirm the service name, region, and instance type, then create the blueprint.
 5. After the first successful deploy, open the web service → **Settings → Custom Domains** and attach your domain; follow Render’s DNS instructions for TLS.
 
-Commit a headshot as **`wwwroot/images/headshot.png`** (tracked in git) so the hero image is included in the Docker image. The downloadable resume is **`WilliamMiller_Resume.md`** from **Resume → Download** (markdown composed from `Data/resume.json`, not PDF).
+Commit a headshot as **`wwwroot/images/headshot.jpg`** (or change the `src` in `Views/Home/Index.cshtml` to match your filename) so the hero image is included in the Docker image. The downloadable resume is **`WilliamMiller_Resume.md`** from **Resume → Download** (markdown composed from `Data/resume.json`, not PDF).
 
 Operational detail (environment variables, health checks, domains, logs, rollbacks) is documented in **[`docs/devops-render.md`](./docs/devops-render.md)** in the same structure Render uses for web services and blueprints. Custom domains and DNS are also covered in [Render — Custom domains](https://render.com/docs/custom-domains).
 
